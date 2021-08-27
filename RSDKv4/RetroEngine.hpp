@@ -196,7 +196,7 @@ enum RetroGameType {
 #include <vorbis/vorbisfile.h>
 #elif RETRO_PLATFORM == RETRO_OSX
 #include <SDL2/SDL.h>
-#include <Vorbis/vorbisfile.h>
+#include <vorbis/vorbisfile.h>
 
 #include "cocoaHelpers.hpp"
 
