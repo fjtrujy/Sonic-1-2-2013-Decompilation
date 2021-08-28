@@ -5,6 +5,10 @@
 #include <android/log.h>
 #endif
 
+#if RETRO_PLATFORM == RETRO_PS2
+#include <stdarg.h>
+#endif
+
 extern bool endLine;
 inline void printLog(const char *msg, ...)
 {

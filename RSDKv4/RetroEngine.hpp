@@ -38,8 +38,9 @@ typedef unsigned int uint;
 #define RETRO_iOS      (4)
 #define RETRO_ANDROID  (5)
 #define RETRO_WP7      (6)
+#define RETRO_PS2      (7)
 // Custom Platforms start here
-#define RETRO_UWP (7)
+#define RETRO_UWP (8)
 
 // Platform types (Game manages platform-specific code such as HUD position using this rather than the above)
 #define RETRO_STANDARD (0)
@@ -62,6 +63,9 @@ typedef unsigned int uint;
 #define RETRO_DEVICETYPE (RETRO_STANDARD)
 #endif
 
+#elif defined PS2
+#define RETRO_PLATFORM   (RETRO_PS2)
+#define RETRO_DEVICETYPE (RETRO_STANDARD)
 #elif defined __APPLE__
 #if __IPHONEOS__
 #define RETRO_PLATFORM   (RETRO_iOS)
@@ -187,7 +191,7 @@ enum RetroGameType {
 #define SCREEN_YSIZE   (240)
 #define SCREEN_CENTERY (SCREEN_YSIZE / 2)
 
-#if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_UWP || RETRO_PLATFORM == RETRO_ANDROID
+#if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_UWP || RETRO_PLATFORM == RETRO_ANDROID || RETRO_PLATFORM == RETRO_PS2
 #if RETRO_USING_SDL2
 #include <SDL.h>
 #elif RETRO_USING_SDL1

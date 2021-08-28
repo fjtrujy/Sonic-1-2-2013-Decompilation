@@ -1,0 +1,151 @@
+BUILD_FOR_PCSX2    = 1
+DEBUG              = 1
+SCREEN_DEBUG       = 0
+HAVE_THREADS       = 0
+MUTE_WARNINGS      = 1
+PS2_IP = 192.168.1.10
+
+TARGET = bin/RSDKv4.elf
+TARGET_RELEASE = retroarchps2.elf
+
+# Compile the IRXs first
+IRX_DIR = ps2/irx
+
+ifeq ($(DEBUG), 1)
+   OPTIMIZE_LV	:= -O0 -g
+	RARCH_DEFINES += -DDEBUG
+else
+   OPTIMIZE_LV	:= -O3
+	LDFLAGS :=  -s
+endif
+
+ifeq ($(MUTE_WARNINGS), 1)
+   DISABLE_WARNINGS := -Wno-unused -Wno-format -Wno-format-truncation -Wno-restrict -Wno-parentheses -Wno-unknown-pragmas \
+      -Wno-sign-compare -Wno-catch-value -Wno-class-memaccess -Wno-sequence-point
+endif
+
+INCDIR = -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include
+# INCDIR += -Ips2/include -Ilibretro-common/include -Ideps -Ideps/stb -Ideps/7zip
+CFLAGS = $(OPTIMIZE_LV) $(DISABLE_WARNINGS) -ffast-math -fsingle-precision-constant
+ASFLAGS = $(CFLAGS)
+
+RARCH_DEFINES += -DPS2 -DHAVE_GRIFFIN=1 -DRARCH_INTERNAL -DHAVE_SCREENSHOTS -DHAVE_REWIND -DRARCH_CONSOLE -DHAVE_MENU -DHAVE_CONFIGFILE -DHAVE_PATCH -DHAVE_CHEATS
+RARCH_DEFINES += -DHAVE_ZLIB -DHAVE_NO_BUILTINZLIB -DHAVE_RPNG -DHAVE_RJPEG -DHAVE_FILTERS_BUILTIN -DHAVE_7ZIP -D_7ZIP_ST -DHAVE_CC_RESAMPLER -DHAVE_AUDIOMIXER
+RARCH_DEFINES += -DHAVE_VIDEO_FILTER -DHAVE_RGUI
+RARCH_DEFINES += -DHAVE_DSP_FILTER
+
+LDFLAGS += -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -L.
+# Lib cdvd is needed to get proper time
+# LIBS += -lretro_ps2 -lpatches -lgskit -ldmakit -laudsrv -lmtap -lpadx -lz -lcdvd -lelf-loader -lfileXio -lpoweroff
+LIBS += -lvorbisfile -lvorbis -logg
+
+ifeq ($(SCREEN_DEBUG), 1)
+LIBS += -ldebug
+RARCH_DEFINES += -DSCREEN_DEBUG
+endif
+
+ifeq ($(BUILD_FOR_PCSX2), 1)
+RARCH_DEFINES += -DBUILD_FOR_PCSX2
+endif
+
+ifeq ($(HAVE_THREADS), 1)
+RARCH_DEFINES += -DHAVE_THREADS
+endif
+
+CFLAGS += $(RARCH_DEFINES)
+
+# # All the IRX objects
+# EE_OBJS += $(IRX_DIR)/sio2man_irx.o $ $(IRX_DIR)/iomanX_irx.o $(IRX_DIR)/fileXio_irx.o
+# EE_OBJS += $(IRX_DIR)/mcman_irx.o $(IRX_DIR)/mcserv_irx.o
+# EE_OBJS += $(IRX_DIR)/usbd_irx.o $(IRX_DIR)/bdm_irx.o $(IRX_DIR)/bdmfs_vfat_irx.o $(IRX_DIR)/usbmass_bd_irx.o
+# EE_OBJS += $(IRX_DIR)/libsd_irx.o $(IRX_DIR)/audsrv_irx.o
+# EE_OBJS += $(IRX_DIR)/cdfs_irx.o
+# EE_OBJS += $(IRX_DIR)/ps2dev9_irx.o $(IRX_DIR)/ps2atad_irx.o $(IRX_DIR)/ps2hdd_irx.o $(IRX_DIR)/ps2fs_irx.o $(IRX_DIR)/poweroff_irx.o 
+# EE_OBJS += $(IRX_DIR)/mtapman_irx.o $(IRX_DIR)/padman_irx.o
+
+# Missing objecst on the PS2SDK
+# EE_OBJS += ps2/compat_files/ps2_devices.o
+
+EE_OBJS += RSDKv4/Animation.o     \
+          RSDKv4/Audio.o         \
+          RSDKv4/Collision.o     \
+          RSDKv4/Debug.o         \
+          RSDKv4/Drawing.o       \
+          RSDKv4/Ini.o           \
+          RSDKv4/Input.o         \
+          RSDKv4/main.o          \
+          RSDKv4/Math.o          \
+          RSDKv4/Object.o        \
+          RSDKv4/Palette.o       \
+          RSDKv4/PauseMenu.o     \
+          RSDKv4/Reader.o        \
+          RSDKv4/RetroEngine.o   \
+          RSDKv4/RetroGameLoop.o \
+          RSDKv4/Scene.o         \
+          RSDKv4/Scene3D.o       \
+          RSDKv4/Script.o        \
+          RSDKv4/Sprite.o        \
+          RSDKv4/String.o        \
+          RSDKv4/Text.o          \
+          RSDKv4/Userdata.o      \
+
+ifneq ($(FORCE_CASE_INSENSITIVE),)
+	CFLAGS += -DFORCE_CASE_INSENSITIVE
+	EE_OBJS += RSDKv4/fcaseopen.o
+endif
+
+EE_CFLAGS = $(CFLAGS)
+EE_CXXFLAGS = $(CFLAGS)
+EE_LDFLAGS = $(LDFLAGS)
+EE_LIBS = $(LIBS)
+EE_ASFLAGS = $(ASFLAGS)
+EE_INCS = $(INCDIR)
+EE_BIN = $(TARGET)
+EE_GPVAL = $(GPVAL)
+
+
+all: irxdir $(EE_BIN)
+
+irxdir:
+	mkdir -p bin/
+	# $(MAKE) -C $(IRX_DIR)
+
+clean:
+	rm -f $(EE_BIN) $(EE_OBJS)
+	# $(MAKE) -C $(IRX_DIR) clean
+
+CXXFLAGS_ALL = $(shell pkg-config --cflags --static sdl2 vorbisfile vorbis) $(CXXFLAGS) \
+               -DBASE_PATH='"$(BASE_PATH)"'
+
+LDFLAGS_ALL = $(LDFLAGS)
+LIBS_ALL = $(shell pkg-config --libs --static sdl2 vorbisfile vorbis) -pthread $(LIBS)
+
+# SOURCES = 
+	  
+
+
+# objects/%.o: %
+# 	mkdir -p $(@D)
+# 	$(CXX) $(CXXFLAGS_ALL) -std=c++17 $^ -o $@ -c
+
+# bin/RSDKv4: $(SOURCES:%=objects/%.o)
+# 	mkdir -p $(@D)
+# 	$(CXX) $(CXXFLAGS_ALL) $(LDFLAGS_ALL) $^ -o $@ $(LIBS_ALL)
+
+# install: bin/RSDKv4
+# 	install -Dp -m755 bin/RSDKv4 $(prefix)/bin/RSDKv4
+
+
+EE_CFLAGS = $(CFLAGS)
+EE_CXXFLAGS = $(CFLAGS)
+EE_LDFLAGS = $(LDFLAGS)
+EE_LIBS = $(LIBS)
+EE_ASFLAGS = $(ASFLAGS)
+EE_INCS = $(INCDIR)
+EE_BIN = $(TARGET)
+EE_GPVAL = $(GPVAL)
+
+
+#Include preferences
+include $(PS2SDK)/samples/Makefile.pref
+include $(PS2SDK)/samples/Makefile.eeglobal_cpp
