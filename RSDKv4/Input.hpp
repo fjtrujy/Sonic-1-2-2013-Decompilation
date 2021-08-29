@@ -37,6 +37,35 @@ struct InputData {
     bool select;
 };
 
+// Input Driver
+typedef struct input_driver
+{
+   void (*init)(byte controllerID);
+   void (*close)(byte controllerID);
+   void (*initDevices)();
+   void (*releaseDevices)();
+   void (*processInput)();
+} input_driver_t;
+
+// DRIVERS
+extern input_driver_t input_SDL2;
+extern input_driver_t input_SDL1;
+extern input_driver_t input_PS2;
+extern input_driver_t input_NULL;
+
+
+static const input_driver_t *input_drivers[] = {
+#if RETRO_USING_SDL2
+    &input_SDL2,
+#elif RETRO_USING_SDL1
+    &input_SDL1,
+#elif RETRO_PLATFORM == RETRO_PS2
+    &input_PS2,
+#else
+    &input_NULL,
+#endif
+};
+
 struct InputButton {
     bool press, hold;
     int keyMappings, contMappings;

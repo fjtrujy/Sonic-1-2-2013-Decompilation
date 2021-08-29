@@ -32,13 +32,20 @@ ifneq ($(FORCE_CASE_INSENSITIVE),)
 	SOURCES += RSDKv4/fcaseopen.c
 endif
 
-# Drivers
+# Drawing Drivers
 SOURCES += \
         RSDKv4/drivers/drawing/drawing_SDL1.cpp     \
         RSDKv4/drivers/drawing/drawing_SDL2.cpp     \
         RSDKv4/drivers/drawing/drawing_GL.cpp       \
         RSDKv4/drivers/drawing/drawing_PS2.cpp      \
         RSDKv4/drivers/drawing/drawing_NULL.cpp     \
+
+# Input Drivers
+SOURCES += \
+        RSDKv4/drivers/input/input_SDL1.cpp     \
+        RSDKv4/drivers/input/input_SDL2.cpp     \
+        RSDKv4/drivers/input/input_PS2.cpp      \
+        RSDKv4/drivers/input/input_NULL.cpp     \
 
 CXXFLAGS_ALL += -O0 -g
 
