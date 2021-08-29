@@ -345,6 +345,8 @@ void RetroEngine::Init()
 #endif
     if (LoadGameConfig("Data/Game/GameConfig.bin")) {
         if (InitRenderDevice()) {
+            InitInputDevices();
+            
             if (InitAudioPlayback()) {
                 InitFirstStage();
                 ClearScriptData();
