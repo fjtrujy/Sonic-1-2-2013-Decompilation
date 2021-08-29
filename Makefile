@@ -2,7 +2,7 @@ CXXFLAGS_ALL = $(shell pkg-config --cflags --static sdl2 vorbisfile vorbis) $(CX
                -DBASE_PATH='"$(BASE_PATH)"'
 
 LDFLAGS_ALL = $(LDFLAGS)
-LIBS_ALL = $(shell pkg-config --libs --static sdl2 vorbisfile vorbis) -pthread $(LIBS)
+LIBS_ALL = $(shell pkg-config --libs --static sdl2 vorbisfile vorbis) $(LIBS)
 
 SOURCES = RSDKv4/Animation.cpp     \
           RSDKv4/Audio.cpp         \
@@ -32,6 +32,8 @@ ifneq ($(FORCE_CASE_INSENSITIVE),)
 	SOURCES += RSDKv4/fcaseopen.c
 endif
 
+CXXFLAGS_ALL += -O0 -g
+
 objects/%.o: %
 	mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS_ALL) -std=c++17 $^ -o $@ -c
@@ -44,4 +46,4 @@ install: bin/RSDKv4
 	install -Dp -m755 bin/RSDKv4 $(prefix)/bin/RSDKv4
 
 clean:
-	rm -r -f bin && rm -r -f objects
+	rm -r -f bin/RSDKv4 && rm -r -f objects

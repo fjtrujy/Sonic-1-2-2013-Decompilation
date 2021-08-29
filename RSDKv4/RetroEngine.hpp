@@ -71,7 +71,8 @@ typedef unsigned int uint;
 #define RETRO_PLATFORM   (RETRO_iOS)
 #define RETRO_DEVICETYPE (RETRO_MOBILE)
 #else
-#define RETRO_PLATFORM   (RETRO_OSX)
+// #define RETRO_PLATFORM   (RETRO_OSX)
+#define RETRO_PLATFORM   (RETRO_PS2)
 #define RETRO_DEVICETYPE (RETRO_STANDARD)
 #endif
 #elif defined __ANDROID__
