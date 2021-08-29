@@ -1,13 +1,13 @@
 #ifndef SCRIPT_H
 #define SCRIPT_H
 
-#define SCRIPTDATA_COUNT (0x100000)
-#define JUMPTABLE_COUNT  (0x10000)
-#define FUNCTION_COUNT   (0x200)
+#define SCRIPTDATA_COUNT (0x20000)
+#define JUMPTABLE_COUNT  (0x2000)
+#define FUNCTION_COUNT   (0x100)
 
-#define JUMPSTACK_COUNT (0x400)
-#define FUNCSTACK_COUNT (0x400)
-#define FORSTACK_COUNT  (0x400)
+#define JUMPSTACK_COUNT (0x200)
+#define FUNCSTACK_COUNT (0x200)
+#define FORSTACK_COUNT  (0x200)
 
 struct ScriptPtr {
     int scriptCodePtr;
@@ -34,8 +34,8 @@ struct ScriptEngine {
     int checkResult;
 };
 
-#define TABLE_COUNT       (0x200)
-#define TABLE_ENTRY_COUNT (0x400)
+#define TABLE_COUNT       (0x100)
+#define TABLE_ENTRY_COUNT (0x200)
 
 struct StaticInfo {
     StaticInfo()
