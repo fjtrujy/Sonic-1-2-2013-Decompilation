@@ -92,7 +92,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install libogg-dev libvorbis-dev libsdl2-dev
       - name: Build RSDKv4
-        run: make
+        run: make -j$(getconf _NPROCESSORS_ONLN)
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: v4-linux
+          path: bin
+
+  v4-ps2:
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          apk add build-base git bash make
+      - name: Build RSDKv4
+        run: make -f Makefile.ps2 -j$(getconf _NPROCESSORS_ONLN)
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
