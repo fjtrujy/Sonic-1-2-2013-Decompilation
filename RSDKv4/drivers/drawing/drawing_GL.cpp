@@ -153,6 +153,8 @@ void gl_flipScreen() {
     glColorPointer(4, GL_FLOAT, 0, &pureLight);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glViewport(0, 0, bufferWidth, bufferHeight);
+
+    SDL_GL_SwapWindow(Engine.window);
 #endif
 }
 

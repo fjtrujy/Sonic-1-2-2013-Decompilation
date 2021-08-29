@@ -109,6 +109,13 @@ EE_OBJS += \
         RSDKv4/drivers/input/input_PS2.o      \
         RSDKv4/drivers/input/input_NULL.o     \
 
+
+# Engine Drivers
+EE_OBJS += \
+        RSDKv4/drivers/engine/engine_SDL.o     \
+        RSDKv4/drivers/engine/engine_PS2.o     \
+        RSDKv4/drivers/engine/engine_NULL.o    \
+
 EE_CFLAGS = $(CFLAGS)
 EE_CXXFLAGS = $(CFLAGS)
 EE_LDFLAGS = $(LDFLAGS)

@@ -47,6 +47,12 @@ SOURCES += \
         RSDKv4/drivers/input/input_PS2.cpp      \
         RSDKv4/drivers/input/input_NULL.cpp     \
 
+# Engine Drivers
+SOURCES += \
+        RSDKv4/drivers/engine/engine_SDL.cpp     \
+        RSDKv4/drivers/engine/engine_PS2.cpp     \
+        RSDKv4/drivers/engine/engine_NULL.cpp    \
+
 CXXFLAGS_ALL += -O0 -g
 
 objects/%.o: %
