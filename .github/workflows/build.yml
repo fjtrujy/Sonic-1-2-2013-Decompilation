@@ -6,6 +6,7 @@ on:
       - main
       - win-actions
       - linux-actions
+      - ps2
 
 jobs:
   v4-windows:
@@ -101,7 +102,7 @@ jobs:
 
   v4-ps2:
     runs-on: ubuntu-latest
-    container: ps2dev/ps2dev:latest
+    container: fjtrujy/ps2dev:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
