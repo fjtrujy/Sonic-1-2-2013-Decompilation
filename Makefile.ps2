@@ -94,6 +94,14 @@ ifneq ($(FORCE_CASE_INSENSITIVE),)
 	EE_OBJS += RSDKv4/fcaseopen.o
 endif
 
+# Drivers
+EE_OBJS += \
+        RSDKv4/drivers/drawing/drawing_SDL1.o     \
+        RSDKv4/drivers/drawing/drawing_SDL2.o     \
+        RSDKv4/drivers/drawing/drawing_GL.o       \
+        RSDKv4/drivers/drawing/drawing_PS2.o      \
+        RSDKv4/drivers/drawing/drawing_NULL.o     \
+
 EE_CFLAGS = $(CFLAGS)
 EE_CXXFLAGS = $(CFLAGS)
 EE_LDFLAGS = $(LDFLAGS)

@@ -124,6 +124,37 @@ extern GLuint fbTextureId;
 
 #endif
 
+// Drawing Driver
+typedef struct drawing_driver
+{
+   int (*init)(const char *title);
+   void (*flipScreen)();
+   void (*release)();
+} drawing_driver_t;
+
+
+// DRIVERS
+extern drawing_driver_t drawing_SDL2;
+extern drawing_driver_t drawing_SDL1;
+extern drawing_driver_t drawing_GL;
+extern drawing_driver_t drawing_PS2;
+extern drawing_driver_t drawing_NULL;
+
+
+static const drawing_driver_t *drawing_drivers[] = {
+#if RETRO_USING_SDL2
+    &drawing_SDL2,
+#elif RETRO_USING_SDL1
+    &drawing_SDL1,
+#elif RETRO_USING_OPENGL
+    &drawing_GL,
+#elif RETRO_PLATFORM == RETRO_PS2
+    &drawing_PS2,
+#else
+    &drawing_NULL,
+#endif
+};
+
 int InitRenderDevice();
 void FlipScreen();
 void ReleaseRenderDevice();
