@@ -4,6 +4,8 @@
 
 #include <kernel.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <sbv_patches.h>
 #include <sifrpc.h>
@@ -80,15 +82,35 @@ static void reset_IOP()
    sbv_patch_disable_prefix_check();
 }
 
+bool waitUntilDeviceIsReady(char *path)
+{
+   struct stat buffer;
+   int ret = -1;
+   int retries = 50;
+
+   while(ret != 0 && retries > 0)
+   {
+      ret = stat(path, &buffer);
+      /* Wait untill the device is ready */
+      nopdelay();
+
+      retries--;
+   }
+
+   return ret == 0;
+}
+
 
 #endif
 
 static void ps2_init() {
 #if RETRO_PLATFORM == RETRO_PS2
+    char cwd[FILENAME_MAX];
     reset_IOP();
     load_modules();
 
-    sleep(5);
+    getcwd(cwd, sizeof(cwd));
+    waitUntilDeviceIsReady(cwd);
 #endif
 }
 static bool ps2_run() { return true; }
