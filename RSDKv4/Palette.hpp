@@ -39,9 +39,14 @@ extern int texPaletteNum;
 
 #define RGB888_TO_RGB5551(r, g, b) (2 * ((b) >> 3) | ((g) >> 3 << 6) | ((r) >> 3 << 11) | 0) // used in mobile vers
 #define RGB888_TO_RGB565(r, g, b)  ((b) >> 3) | (((g) >> 2) << 5) | (((r) >> 3) << 11)       // used in pc vers
+#define RGB888_TO_ABGR1555(r, g, b)  ((r) >> 3) | (((g) >> 3) << 5) | (((b) >> 3) << 10)       // used in pc vers
 
 #if RETRO_SOFTWARE_RENDER
+#if RETRO_PLATFORM == RETRO_PS2
+#define PACK_RGB888(r, g, b) RGB888_TO_ABGR1555(r, g, b)
+#else
 #define PACK_RGB888(r, g, b) RGB888_TO_RGB565(r, g, b)
+#endif
 #elif RETRO_HARDWARE_RENDER
 #define PACK_RGB888(r, g, b) RGB888_TO_RGB5551(r, g, b)
 #endif
