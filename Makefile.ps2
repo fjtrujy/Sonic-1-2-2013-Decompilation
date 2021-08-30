@@ -36,8 +36,9 @@ RARCH_DEFINES += -DHAVE_DSP_FILTER
 
 LDFLAGS += -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -L.
 # Lib cdvd is needed to get proper time
-# LIBS += -lretro_ps2 -lpatches -lgskit -ldmakit -laudsrv -lmtap -lpadx -lz -lcdvd -lelf-loader -lfileXio -lpoweroff
-LIBS += -lpatches -lgskit -ldmakit -lvorbisfile -lvorbis -logg
+# LIBS += -lz -lelf-loader -lfileXio -lpoweroff
+LIBS += -lpatches -lgskit -ldmakit -lmtap -lpadx -lcdvd
+LIBS += -lvorbisfile -lvorbis -logg
 
 ifeq ($(SCREEN_DEBUG), 1)
 LIBS += -ldebug

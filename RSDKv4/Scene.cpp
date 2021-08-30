@@ -602,6 +602,7 @@ void LoadStageFiles(void)
             bool bytecodeExists = false;
             FileInfo bytecodeInfo;
             GetFileInfo(&infoStore);
+            CloseFile();
             if (LoadFile("Bytecode/GlobalCode.bin", &info)) {
                 bytecodeExists = true;
                 CloseFile();

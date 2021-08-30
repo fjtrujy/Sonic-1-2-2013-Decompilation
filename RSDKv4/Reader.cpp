@@ -187,6 +187,8 @@ bool LoadFile(const char *filePath, FileInfo *fileInfo)
                 continue;
 
             packID      = file->packID;
+            
+            CloseFile();
             cFileHandle = fOpen(rsdkContainer.packNames[file->packID], "rb");
             fSeek(cFileHandle, 0, SEEK_END);
             fileSize = (int)fTell(cFileHandle);
@@ -417,6 +419,8 @@ void SetFileInfo(FileInfo *fileInfo)
         if (useEncryption) {
             GenerateELoadKeys(vFileSize, (vFileSize >> 1) + 1);
         }
+
+        CloseFile();
     }
     else {
         StrCopy(fileName, fileInfo->fileName);
@@ -434,6 +438,7 @@ void SetFileInfo(FileInfo *fileInfo)
         useEncryption        = fileInfo->useEncryption;
         packID               = fileInfo->packID;
         Engine.usingDataFile = fileInfo->usingDataPack;
+        CloseFile();
     }
 }
 
