@@ -1,5 +1,9 @@
 #include "RetroEngine.hpp"
 
+#if RETRO_PLATFORM == RETRO_PS2
+#include <input.h>
+#endif
+
 int globalVariablesCount;
 int globalVariables[GLOBALVAR_COUNT];
 char globalVariableNames[GLOBALVAR_COUNT][0x20];
@@ -196,6 +200,28 @@ void InitUserdata()
         ini.SetInteger("Controller 1", "R", inputDevice[INPUT_BUTTONR].contMappings = 13);
         ini.SetInteger("Controller 1", "Start", inputDevice[INPUT_START].contMappings = 8);
         ini.SetInteger("Controller 1", "Select", inputDevice[INPUT_SELECT].contMappings = 14);
+
+        ini.SetFloat("Controller 1", "LStickDeadzone", LSTICK_DEADZONE = 0.3);
+        ini.SetFloat("Controller 1", "RStickDeadzone", RSTICK_DEADZONE = 0.3);
+        ini.SetFloat("Controller 1", "LTriggerDeadzone", LTRIGGER_DEADZONE = 0.3);
+        ini.SetFloat("Controller 1", "RTriggerDeadzone", RTRIGGER_DEADZONE = 0.3);
+#endif
+
+#if RETRO_PLATFORM == RETRO_PS2
+        ini.SetInteger("Controller 1", "Up", inputDevice[INPUT_UP].contMappings = PAD_UP);
+        ini.SetInteger("Controller 1", "Down", inputDevice[INPUT_DOWN].contMappings = PAD_DOWN);
+        ini.SetInteger("Controller 1", "Left", inputDevice[INPUT_LEFT].contMappings = PAD_LEFT);
+        ini.SetInteger("Controller 1", "Right", inputDevice[INPUT_RIGHT].contMappings = PAD_RIGHT);
+        ini.SetInteger("Controller 1", "A", inputDevice[INPUT_BUTTONA].contMappings = PAD_SQUARE);
+        ini.SetInteger("Controller 1", "B", inputDevice[INPUT_BUTTONB].contMappings = PAD_CROSS);
+        ini.SetInteger("Controller 1", "C", inputDevice[INPUT_BUTTONC].contMappings = PAD_CIRCLE);
+        ini.SetInteger("Controller 1", "X", inputDevice[INPUT_BUTTONX].contMappings = PAD_TRIANGLE);
+        ini.SetInteger("Controller 1", "Y", inputDevice[INPUT_BUTTONY].contMappings = PAD_L1);
+        ini.SetInteger("Controller 1", "Z", inputDevice[INPUT_BUTTONZ].contMappings = PAD_R1);
+        ini.SetInteger("Controller 1", "L", inputDevice[INPUT_BUTTONL].contMappings = PAD_L2);
+        ini.SetInteger("Controller 1", "R", inputDevice[INPUT_BUTTONR].contMappings = PAD_R2);
+        ini.SetInteger("Controller 1", "Start", inputDevice[INPUT_START].contMappings = PAD_START);
+        ini.SetInteger("Controller 1", "Select", inputDevice[INPUT_SELECT].contMappings = PAD_SELECT);
 
         ini.SetFloat("Controller 1", "LStickDeadzone", LSTICK_DEADZONE = 0.3);
         ini.SetFloat("Controller 1", "RStickDeadzone", RSTICK_DEADZONE = 0.3);
@@ -415,6 +441,46 @@ void InitUserdata()
             inputDevice[INPUT_START].contMappings = 13;
         if (!ini.GetInteger("Controller 1", "Select", &inputDevice[INPUT_SELECT].contMappings))
             inputDevice[INPUT_SELECT].contMappings = 14;
+
+        if (!ini.GetFloat("Controller 1", "LStickDeadzone", &LSTICK_DEADZONE))
+            LSTICK_DEADZONE = 0.3;
+        if (!ini.GetFloat("Controller 1", "RStickDeadzone", &RSTICK_DEADZONE))
+            RSTICK_DEADZONE = 0.3;
+        if (!ini.GetFloat("Controller 1", "LTriggerDeadzone", &LTRIGGER_DEADZONE))
+            LTRIGGER_DEADZONE = 0.3;
+        if (!ini.GetFloat("Controller 1", "RTriggerDeadzone", &RTRIGGER_DEADZONE))
+            RTRIGGER_DEADZONE = 0.3;
+#endif
+
+#if RETRO_PLATFORM == RETRO_PS2
+        if (!ini.GetInteger("Controller 1", "Up", &inputDevice[INPUT_UP].contMappings))
+            inputDevice[INPUT_UP].contMappings = PAD_UP;
+        if (!ini.GetInteger("Controller 1", "Down", &inputDevice[INPUT_DOWN].contMappings))
+            inputDevice[INPUT_DOWN].contMappings = PAD_DOWN;
+        if (!ini.GetInteger("Controller 1", "Left", &inputDevice[INPUT_LEFT].contMappings))
+            inputDevice[INPUT_LEFT].contMappings = PAD_LEFT;
+        if (!ini.GetInteger("Controller 1", "Right", &inputDevice[INPUT_RIGHT].contMappings))
+            inputDevice[INPUT_RIGHT].contMappings = PAD_RIGHT;
+        if (!ini.GetInteger("Controller 1", "A", &inputDevice[INPUT_BUTTONA].contMappings))
+            inputDevice[INPUT_BUTTONA].contMappings = PAD_SQUARE;
+        if (!ini.GetInteger("Controller 1", "B", &inputDevice[INPUT_BUTTONB].contMappings))
+            inputDevice[INPUT_BUTTONB].contMappings = PAD_CROSS;
+        if (!ini.GetInteger("Controller 1", "C", &inputDevice[INPUT_BUTTONC].contMappings))
+            inputDevice[INPUT_BUTTONC].contMappings = PAD_CIRCLE;
+        if (!ini.GetInteger("Controller 1", "X", &inputDevice[INPUT_BUTTONX].contMappings))
+            inputDevice[INPUT_BUTTONX].contMappings = PAD_TRIANGLE;
+        if (!ini.GetInteger("Controller 1", "Y", &inputDevice[INPUT_BUTTONY].contMappings))
+            inputDevice[INPUT_BUTTONY].contMappings = PAD_L1;
+        if (!ini.GetInteger("Controller 1", "Z", &inputDevice[INPUT_BUTTONZ].contMappings))
+            inputDevice[INPUT_BUTTONZ].contMappings = PAD_R1;
+        if (!ini.GetInteger("Controller 1", "L", &inputDevice[INPUT_BUTTONL].contMappings))
+            inputDevice[INPUT_BUTTONL].contMappings = PAD_L2;
+        if (!ini.GetInteger("Controller 1", "R", &inputDevice[INPUT_BUTTONR].contMappings))
+            inputDevice[INPUT_BUTTONR].contMappings = PAD_R2;
+        if (!ini.GetInteger("Controller 1", "Start", &inputDevice[INPUT_START].contMappings))
+            inputDevice[INPUT_START].contMappings = PAD_START;
+        if (!ini.GetInteger("Controller 1", "Select", &inputDevice[INPUT_SELECT].contMappings))
+            inputDevice[INPUT_SELECT].contMappings = PAD_SELECT;
 
         if (!ini.GetFloat("Controller 1", "LStickDeadzone", &LSTICK_DEADZONE))
             LSTICK_DEADZONE = 0.3;
