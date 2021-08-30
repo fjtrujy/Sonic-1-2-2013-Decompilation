@@ -1,5 +1,5 @@
 BUILD_FOR_PCSX2    = 1
-DEBUG              = 1
+DEBUG              = 0
 SCREEN_DEBUG       = 0
 HAVE_THREADS       = 0
 MUTE_WARNINGS      = 1
@@ -21,7 +21,7 @@ endif
 
 ifeq ($(MUTE_WARNINGS), 1)
    DISABLE_WARNINGS := -Wno-unused -Wno-format -Wno-format-truncation -Wno-restrict -Wno-parentheses -Wno-unknown-pragmas \
-      -Wno-sign-compare -Wno-catch-value -Wno-class-memaccess -Wno-sequence-point
+      -Wno-sign-compare -Wno-class-memaccess -Wno-sequence-point
 endif
 
 INCDIR = -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include
@@ -55,13 +55,13 @@ endif
 CFLAGS += $(RARCH_DEFINES)
 
 # # All the IRX objects
-# EE_OBJS += $(IRX_DIR)/sio2man_irx.o $ $(IRX_DIR)/iomanX_irx.o $(IRX_DIR)/fileXio_irx.o
+EE_OBJS += sio2man_irx.o iomanX_irx.o fileXio_irx.o
 # EE_OBJS += $(IRX_DIR)/mcman_irx.o $(IRX_DIR)/mcserv_irx.o
-# EE_OBJS += $(IRX_DIR)/usbd_irx.o $(IRX_DIR)/bdm_irx.o $(IRX_DIR)/bdmfs_vfat_irx.o $(IRX_DIR)/usbmass_bd_irx.o
+EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_vfat_irx.o usbmass_bd_irx.o
 # EE_OBJS += $(IRX_DIR)/libsd_irx.o $(IRX_DIR)/audsrv_irx.o
 # EE_OBJS += $(IRX_DIR)/cdfs_irx.o
 # EE_OBJS += $(IRX_DIR)/ps2dev9_irx.o $(IRX_DIR)/ps2atad_irx.o $(IRX_DIR)/ps2hdd_irx.o $(IRX_DIR)/ps2fs_irx.o $(IRX_DIR)/poweroff_irx.o 
-# EE_OBJS += $(IRX_DIR)/mtapman_irx.o $(IRX_DIR)/padman_irx.o
+EE_OBJS += mtapman_irx.o padman_irx.o
 
 # Missing objecst on the PS2SDK
 # EE_OBJS += ps2/compat_files/ps2_devices.o
@@ -127,6 +127,34 @@ EE_GPVAL = $(GPVAL)
 
 
 all: irxdir $(EE_BIN)
+
+# IRX files
+sio2man_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/sio2man.irx $@ sio2man_irx
+
+iomanX_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/iomanX.irx $@ iomanX_irx
+
+fileXio_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/fileXio.irx $@ fileXio_irx
+
+usbd_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/usbd.irx $@ usbd_irx
+
+bdm_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/bdm.irx $@ bdm_irx
+
+bdmfs_vfat_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/bdmfs_vfat.irx $@ bdmfs_vfat_irx
+
+usbmass_bd_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/usbmass_bd.irx $@ usbmass_bd_irx
+
+mtapman_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/mtapman.irx $@ mtapman_irx
+
+padman_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/padman.irx $@ padman_irx
 
 irxdir:
 	mkdir -p bin/
