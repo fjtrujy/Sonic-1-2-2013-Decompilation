@@ -39,13 +39,39 @@ extern int texPaletteNum;
 
 #define RGB888_TO_RGB5551(r, g, b) (2 * ((b) >> 3) | ((g) >> 3 << 6) | ((r) >> 3 << 11) | 0) // used in mobile vers
 #define RGB888_TO_RGB565(r, g, b)  ((b) >> 3) | (((g) >> 2) << 5) | (((r) >> 3) << 11)       // used in pc vers
-#define RGB888_TO_ABGR1555(r, g, b)  ((r) >> 3) | (((g) >> 3) << 5) | (((b) >> 3) << 10)       // used in pc vers
+#define RGB888_TO_ABGR1555(r, g, b)  ((r) >> 3) | (((g) >> 3) << 5) | (((b) >> 3) << 10) | 1 << 15 // used in PS2 vers
 
 #if RETRO_SOFTWARE_RENDER
 #if RETRO_PLATFORM == RETRO_PS2
 #define PACK_RGB888(r, g, b) RGB888_TO_ABGR1555(r, g, b)
+
+#define RED_MASK 0x1F
+#define GREEN_MASK 0x3E0
+#define BLUE_MASK 0x7C00
+
+#define RED_SHIFT 0
+#define GREEN_SHIFT 5
+#define BLUE_SHIFT 10
+// Used for get index in the alpha table
+#define GREEN_SHIFT_ALPHA (GREEN_SHIFT + 0)
+#define TINT_DEFAULT 0x421
+#define MAGENTA 0x7C1F
+
 #else
 #define PACK_RGB888(r, g, b) RGB888_TO_RGB565(r, g, b)
+
+#define RED_MASK 0xF800
+#define GREEN_MASK 0x7E0
+#define BLUE_MASK 0x1F
+
+#define RED_SHIFT 11
+#define GREEN_SHIFT 5
+#define BLUE_SHIFT 0
+// Used for get index in the alpha table
+#define GREEN_SHIFT_ALPHA (GREEN_SHIFT + 1)
+#define TINT_DEFAULT 0x841
+#define MAGENTA 0xF81F
+
 #endif
 #elif RETRO_HARDWARE_RENDER
 #define PACK_RGB888(r, g, b) RGB888_TO_RGB5551(r, g, b)
