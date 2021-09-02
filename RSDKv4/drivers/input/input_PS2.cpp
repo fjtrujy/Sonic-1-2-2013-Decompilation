@@ -70,7 +70,6 @@ static void ps2_initDevices() {
                 joy_port = port;
                 joy_slot = slot;
                 printf("controller_ps2: using pad (%d, %d)\n", port, slot);
-                printf("FJTRUJY: %s, %s:%i\n", __FUNCTION__, __FILE__, __LINE__);
                 break;
             }
         }

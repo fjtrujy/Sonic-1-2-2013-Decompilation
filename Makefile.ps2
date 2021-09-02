@@ -117,6 +117,12 @@ EE_OBJS += \
         RSDKv4/drivers/engine/engine_PS2.o     \
         RSDKv4/drivers/engine/engine_NULL.o    \
 
+# Engine Drivers
+EE_OBJS += \
+        RSDKv4/drivers/audio/audio_SDL2.o     \
+        RSDKv4/drivers/audio/audio_PS2.o     \
+        RSDKv4/drivers/audio/audio_NULL.o    \
+
 EE_CFLAGS = $(CFLAGS)
 EE_CXXFLAGS = $(CFLAGS)
 EE_LDFLAGS = $(LDFLAGS)

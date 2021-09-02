@@ -53,6 +53,12 @@ SOURCES += \
         RSDKv4/drivers/engine/engine_PS2.cpp     \
         RSDKv4/drivers/engine/engine_NULL.cpp    \
 
+# Audio Drivers
+SOURCES += \
+        RSDKv4/drivers/audio/audio_SDL2.cpp     \
+        # RSDKv4/drivers/engine/engine_PS2.cpp     \
+        # RSDKv4/drivers/engine/engine_NULL.cpp    \
+
 CXXFLAGS_ALL += -O0 -g
 
 objects/%.o: %
