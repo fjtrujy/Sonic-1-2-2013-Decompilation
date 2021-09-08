@@ -120,6 +120,7 @@ extern MusicPlaybackInfo musInfo;
 #endif
 
 int InitAudioPlayback();
+void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len);
 void LoadGlobalSfx();
 void SetMusicTrack(const char *filePath, byte trackID, bool loop, uint loopPoint);
 void SwapMusicTrack(const char *filePath, byte trackID, uint loopPoint, uint ratio);

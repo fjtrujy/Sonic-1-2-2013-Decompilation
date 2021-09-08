@@ -81,8 +81,8 @@ static void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
     switch (musicStatus) {
         case MUSIC_READY:
         case MUSIC_PLAYING: {
-            if (audio_drv->availableStream)
-            while (audio_drv->availableStream() < bytes_wanted) {
+            // if (audio_drv->availableStream) 
+            // while (audio_drv->availableStream() < bytes_wanted) {
                 // We need more samples: get some
                 long bytes_read = ov_read(&musInfo.vorbisFile, (char *)musInfo.buffer, sizeof(musInfo.buffer), 0, 2, 1, &musInfo.vorbBitstream);
 
@@ -90,17 +90,17 @@ static void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
                     // We've reached the end of the file
                     if (musInfo.trackLoop) {
                         ov_pcm_seek(&musInfo.vorbisFile, musInfo.loopPoint);
-                        continue;
+                        // continue;
                     }
                     else {
                         musicStatus = MUSIC_STOPPED;
-                        break;
+                        // break;
                     }
                 }
                 if (audio_drv->streamPut)
                     if (audio_drv->streamPut(musInfo.buffer, bytes_read)== -1)
                         return;
-            }
+            // }
 
             // Now that we know there are enough samples, read them and mix them
             int bytes_done = -1;
@@ -123,7 +123,7 @@ static void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
     }
 }
 
-static void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
+void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
 {
     (void)userdata; // Unused
 

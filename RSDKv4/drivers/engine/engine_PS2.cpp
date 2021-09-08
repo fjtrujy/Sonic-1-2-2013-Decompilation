@@ -13,6 +13,7 @@
 #include <loadfile.h>
 #include <libmtap.h>
 #include <libpad.h>
+#include <audsrv.h>
 
 extern unsigned char sio2man_irx;
 extern unsigned int size_sio2man_irx;
@@ -41,6 +42,12 @@ extern unsigned int size_mtapman_irx;
 extern unsigned char padman_irx;
 extern unsigned int size_padman_irx;
 
+extern unsigned char libsd_irx;
+extern unsigned int size_libsd_irx;
+
+extern unsigned char audsrv_irx;
+extern unsigned int size_audsrv_irx;
+
 static void load_modules() 
 {
    /* I/O Files */
@@ -58,6 +65,10 @@ static void load_modules()
    SifExecModuleBuffer(&mtapman_irx, size_mtapman_irx, 0, NULL, NULL);
    SifExecModuleBuffer(&padman_irx, size_padman_irx, 0, NULL, NULL);
 
+   /* Audio */
+   SifExecModuleBuffer(&libsd_irx, size_libsd_irx, 0, NULL, NULL);
+   SifExecModuleBuffer(&audsrv_irx, size_audsrv_irx, 0, NULL, NULL);
+
    if (mtapInit() != 1)
    {
       printLog("mtapInit library not initalizated\n");
@@ -65,6 +76,12 @@ static void load_modules()
    if (padInit(0) != 1)
    {
       printLog("padInit library not initalizated\n");
+   }
+
+   /* Initializes audsrv library */
+   if (audsrv_init())
+   {
+      printLog("audsrv library not initalizated\n");
    }
 }
 

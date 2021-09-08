@@ -37,7 +37,7 @@ RARCH_DEFINES += -DHAVE_DSP_FILTER
 LDFLAGS += -L$(PS2DEV)/gsKit/lib -L$(PS2SDK)/ports/lib -L.
 # Lib cdvd is needed to get proper time
 # LIBS += -lz -lelf-loader -lfileXio -lpoweroff
-LIBS += -lpatches -lgskit -ldmakit -lmtap -lpadx -lcdvd
+LIBS += -lpatches -lgskit -ldmakit -lmtap -lpadx -lcdvd -laudsrv
 LIBS += -lvorbisfile -lvorbis -logg
 
 ifeq ($(SCREEN_DEBUG), 1)
@@ -59,7 +59,7 @@ CFLAGS += $(RARCH_DEFINES)
 EE_OBJS += sio2man_irx.o iomanX_irx.o fileXio_irx.o
 # EE_OBJS += $(IRX_DIR)/mcman_irx.o $(IRX_DIR)/mcserv_irx.o
 EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_vfat_irx.o usbmass_bd_irx.o
-# EE_OBJS += $(IRX_DIR)/libsd_irx.o $(IRX_DIR)/audsrv_irx.o
+EE_OBJS += libsd_irx.o audsrv_irx.o
 # EE_OBJS += $(IRX_DIR)/cdfs_irx.o
 # EE_OBJS += $(IRX_DIR)/ps2dev9_irx.o $(IRX_DIR)/ps2atad_irx.o $(IRX_DIR)/ps2hdd_irx.o $(IRX_DIR)/ps2fs_irx.o $(IRX_DIR)/poweroff_irx.o 
 EE_OBJS += mtapman_irx.o padman_irx.o
@@ -162,6 +162,12 @@ mtapman_irx.c:
 
 padman_irx.c:
 	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/padman.irx $@ padman_irx
+
+libsd_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/libsd.irx $@ libsd_irx
+
+audsrv_irx.c:
+	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/audsrv.irx $@ audsrv_irx
 
 irxdir:
 	mkdir -p bin/

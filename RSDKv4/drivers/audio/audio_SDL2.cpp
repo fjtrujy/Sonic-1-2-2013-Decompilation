@@ -11,6 +11,8 @@ static SDL_AudioStream *stream;
 static SDL_AudioDeviceID audioDevice;
 static SDL_AudioSpec audioDeviceFormat;
 
+int total_reserved = 0;
+
 #endif
 
 static int sdl2_init(PlaybackFunction playbackFunc) {
@@ -99,6 +101,9 @@ static void sdl2_loadWav(const char *filePath, FileInfo *info, byte sfxID, byte 
                 SDL_ConvertAudio(&convert);
 
                 sdl2_lock();
+
+                total_reserved += wav_length * convert.len_mult;
+                printf("Total reserverd %i\n", total_reserved);
 
                 StrCopy(sfxList[sfxID].name, filePath);
                 sfxList[sfxID].buffer = (Sint16 *)convert.buf;
