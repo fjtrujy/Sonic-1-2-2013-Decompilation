@@ -21,10 +21,10 @@ endif
 
 ifeq ($(MUTE_WARNINGS), 1)
    DISABLE_WARNINGS := -Wno-unused -Wno-format -Wno-format-truncation -Wno-restrict -Wno-parentheses -Wno-unknown-pragmas \
-      -Wno-sign-compare -Wno-class-memaccess -Wno-sequence-point
+      -Wno-sign-compare -Wno-sequence-point
 endif
 
-INCDIR = -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include
+INCDIR = -I$(PS2DEV)/gsKit/include -I$(PS2SDK)/ports/include -Icmixer
 # INCDIR += -Ips2/include -Ilibretro-common/include -Ideps -Ideps/stb -Ideps/7zip
 CFLAGS = $(OPTIMIZE_LV) $(DISABLE_WARNINGS) -ffast-math -fsingle-precision-constant
 ASFLAGS = $(CFLAGS)
@@ -122,6 +122,10 @@ EE_OBJS += \
         RSDKv4/drivers/audio/audio_SDL2.o     \
         RSDKv4/drivers/audio/audio_PS2.o     \
         RSDKv4/drivers/audio/audio_NULL.o    \
+
+
+# CMixer Objects
+EE_OBJS += cmixer/cmixer.o     
 
 EE_CFLAGS = $(CFLAGS)
 EE_CXXFLAGS = $(CFLAGS)

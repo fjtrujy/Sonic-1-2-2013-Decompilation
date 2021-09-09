@@ -1,7 +1,7 @@
 #ifndef SCRIPT_H
 #define SCRIPT_H
 
-#define SCRIPTDATA_COUNT (0x20000)
+#define SCRIPTDATA_COUNT (0x15000)
 #define JUMPTABLE_COUNT  (0x2000)
 #define FUNCTION_COUNT   (0x100)
 

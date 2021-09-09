@@ -1,6 +1,8 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include "cmixer.hpp"
+
 #if !RETRO_USING_SDL1 && !RETRO_USING_SDL2
 typedef signed short	Sint16;
 typedef signed int	Sint32;
@@ -10,11 +12,6 @@ typedef unsigned char	Uint8;
 
 #define TRACK_COUNT (0x10)
 #define SFX_COUNT   (0x100)
-#if !RETRO_USE_ORIGINAL_CODE
-#define CHANNEL_COUNT (0x10) // 4 in the original, 16 for convenience
-#else
-#define CHANNEL_COUNT (0x4)
-#endif
 
 #define MAX_VOLUME (100)
 
@@ -72,19 +69,18 @@ static const audio_driver_t *audio_drivers[] = {
 #endif
 };
 
-struct SFXInfo {
-    char name[0x40];
-    Sint16 *buffer;
-    size_t length;
-    bool loaded;
-};
-
 struct ChannelInfo {
     size_t sampleLength;
     Sint16 *samplePtr;
     int sfxID;
     byte loopSFX;
     sbyte pan;
+};
+
+struct SFXInfo {
+    struct cm_Source *source;
+    void *buffer;
+    char name[0x40];
 };
 
 enum MusicStatuses {
@@ -110,17 +106,13 @@ extern int musicPosition;
 extern int musicRatio;
 extern TrackInfo musicTracks[TRACK_COUNT];
 
-extern SFXInfo sfxList[SFX_COUNT];
-extern char sfxNames[SFX_COUNT][0x40];
-
-extern ChannelInfo sfxChannels[CHANNEL_COUNT];
+extern struct SFXInfo *sfxList[SFX_COUNT];
 
 #if !RETRO_USE_ORIGINAL_CODE
 extern MusicPlaybackInfo musInfo;
 #endif
 
 int InitAudioPlayback();
-void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len);
 void LoadGlobalSfx();
 void SetMusicTrack(const char *filePath, byte trackID, bool loop, uint loopPoint);
 void SwapMusicTrack(const char *filePath, byte trackID, uint loopPoint, uint ratio);

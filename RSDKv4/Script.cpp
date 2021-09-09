@@ -1576,7 +1576,8 @@ void ConvertFunctionText(char *text)
                 AppendIntegerToString(funcName, 0);
                 int s = 0;
                 for (; s < SFX_COUNT; ++s) {
-                    if (StrComp(arrayStr, sfxNames[s])) {
+                    struct SFXInfo *info = sfxList[s];
+                    if (StrComp(arrayStr, info->name)) {
                         funcName[0] = 0;
                         AppendIntegerToString(funcName, s);
                         break;

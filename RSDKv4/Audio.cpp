@@ -1,6 +1,9 @@
 #include "RetroEngine.hpp"
 #include <cmath>
 
+#include <kernel.h>
+#include <audsrv.h>
+
 int globalSFXCount = 0;
 int stageSFXCount  = 0;
 
@@ -15,11 +18,9 @@ int musicStatus   = MUSIC_STOPPED;
 int musicStartPos = 0;
 int musicPosition = 0;
 int musicRatio    = 0;
-TrackInfo musicTracks[TRACK_COUNT];
-SFXInfo sfxList[SFX_COUNT];
-char sfxNames[SFX_COUNT][0x40];
 
-ChannelInfo sfxChannels[CHANNEL_COUNT];
+TrackInfo musicTracks[TRACK_COUNT];
+struct SFXInfo *sfxList[SFX_COUNT];
 
 #if !RETRO_USE_ORIGINAL_CODE
 MusicPlaybackInfo musInfo;
@@ -34,169 +35,7 @@ static const audio_driver_t *audio_drv = audio_drivers[0];
 
 #define MIX_BUFFER_SAMPLES (256)
 
-static void ProcessAudioMixing(Sint32 *dst, const Sint16 *src, int len, int volume, sbyte pan)
-{
-    if (volume == 0)
-        return;
-
-    if (volume > MAX_VOLUME)
-        volume = MAX_VOLUME;
-
-    float panL = 0.0;
-    float panR = 0.0;
-    int i      = 0;
-
-    if (pan < 0) {
-        panR = 1.0f - abs(pan / 100.0f);
-        panL = 1.0f;
-    }
-    else if (pan > 0) {
-        panL = 1.0f - abs(pan / 100.0f);
-        panR = 1.0f;
-    }
-
-    while (len--) {
-        Sint32 sample = *src++;
-        ADJUST_VOLUME(sample, volume);
-
-        if (pan != 0) {
-            if ((i % 2) != 0) {
-                sample *= panR;
-            }
-            else {
-                sample *= panL;
-            }
-        }
-
-        *dst++ += sample;
-
-        i++;
-    }
-}
-
-static void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
-{
-    if (!musInfo.loaded)
-        return;
-    switch (musicStatus) {
-        case MUSIC_READY:
-        case MUSIC_PLAYING: {
-            // if (audio_drv->availableStream) 
-            // while (audio_drv->availableStream() < bytes_wanted) {
-                // We need more samples: get some
-                long bytes_read = ov_read(&musInfo.vorbisFile, (char *)musInfo.buffer, sizeof(musInfo.buffer), 0, 2, 1, &musInfo.vorbBitstream);
-
-                if (bytes_read == 0) {
-                    // We've reached the end of the file
-                    if (musInfo.trackLoop) {
-                        ov_pcm_seek(&musInfo.vorbisFile, musInfo.loopPoint);
-                        // continue;
-                    }
-                    else {
-                        musicStatus = MUSIC_STOPPED;
-                        // break;
-                    }
-                }
-                if (audio_drv->streamPut)
-                    if (audio_drv->streamPut(musInfo.buffer, bytes_read)== -1)
-                        return;
-            // }
-
-            // Now that we know there are enough samples, read them and mix them
-            int bytes_done = -1;
-            if (audio_drv->streamGet)
-                bytes_done = audio_drv->streamGet(musInfo.buffer, bytes_wanted);
-            
-            if (bytes_done == -1) {
-                return;
-            }
-            if (bytes_done != 0)
-                ProcessAudioMixing(stream, musInfo.buffer, bytes_done / sizeof(Sint16), (bgmVolume * masterVolume) / MAX_VOLUME, 0);
-            
-            break;
-        }
-        case MUSIC_STOPPED:
-        case MUSIC_PAUSED:
-        case MUSIC_LOADING:
-            // dont play
-            break;
-    }
-}
-
-void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
-{
-    (void)userdata; // Unused
-
-    if (!audioEnabled)
-        return;
-
-    Sint16 *output_buffer = (Sint16 *)stream;
-
-    size_t samples_remaining = (size_t)len / sizeof(Sint16);
-    while (samples_remaining != 0) {
-        Sint32 mix_buffer[MIX_BUFFER_SAMPLES];
-        memset(mix_buffer, 0, sizeof(mix_buffer));
-
-        const size_t samples_to_do = (samples_remaining < MIX_BUFFER_SAMPLES) ? samples_remaining : MIX_BUFFER_SAMPLES;
-
-        // Mix music
-        ProcessMusicStream(mix_buffer, samples_to_do * sizeof(Sint16));
-
-        // Mix SFX
-        for (byte i = 0; i < CHANNEL_COUNT; ++i) {
-            ChannelInfo *sfx = &sfxChannels[i];
-            if (sfx == NULL)
-                continue;
-
-            if (sfx->sfxID < 0)
-                continue;
-
-            if (sfx->samplePtr) {
-                Sint16 buffer[MIX_BUFFER_SAMPLES];
-
-                size_t samples_done = 0;
-                while (samples_done != samples_to_do) {
-                    size_t sampleLen = (sfx->sampleLength < samples_to_do - samples_done) ? sfx->sampleLength : samples_to_do - samples_done;
-                    memcpy(&buffer[samples_done], sfx->samplePtr, sampleLen * sizeof(Sint16));
-
-                    samples_done += sampleLen;
-                    sfx->samplePtr += sampleLen;
-                    sfx->sampleLength -= sampleLen;
-
-                    if (sfx->sampleLength == 0) {
-                        if (sfx->loopSFX) {
-                            sfx->samplePtr    = sfxList[sfx->sfxID].buffer;
-                            sfx->sampleLength = sfxList[sfx->sfxID].length;
-                        }
-                        else {
-                            StopSfx(sfx->sfxID);
-                            break;
-                        }
-                    }
-                }
-
-                ProcessAudioMixing(mix_buffer, buffer, (int)samples_done, sfxVolume, sfx->pan);
-            }
-        }
-
-        // Clamp mixed samples back to 16-bit and write them to the output buffer
-        for (size_t i = 0; i < sizeof(mix_buffer) / sizeof(*mix_buffer); ++i) {
-            const Sint16 max_audioval = ((1 << (16 - 1)) - 1);
-            const Sint16 min_audioval = -(1 << (16 - 1));
-
-            const Sint32 sample = mix_buffer[i];
-
-            if (sample > max_audioval)
-                *output_buffer++ = max_audioval;
-            else if (sample < min_audioval)
-                *output_buffer++ = min_audioval;
-            else
-                *output_buffer++ = sample;
-        }
-
-        samples_remaining -= samples_to_do;
-    }
-}
+void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len) {}
 
 int InitAudioPlayback()
 {
@@ -217,6 +56,12 @@ void LoadGlobalSfx()
     char strBuffer[0x100];
     byte fileBuffer = 0;
     int fileBuffer2 = 0;
+
+    int i;
+    for (i = 0; i <SFX_COUNT; i++) {
+        if(!sfxList[i])
+            sfxList[i] = (SFXInfo *)calloc(1, sizeof(SFXInfo));
+    }
 
     if (LoadFile("Data/Game/GameConfig.bin", &info)) {
         infoStore = info;
@@ -280,8 +125,6 @@ void LoadGlobalSfx()
 
         CloseFile();
     }
-
-    for (int i = 0; i < CHANNEL_COUNT; ++i) sfxChannels[i].sfxID = -1;
 }
 
 size_t readVorbis(void *mem, size_t size, size_t nmemb, void *ptr)
@@ -514,15 +357,11 @@ bool PlayMusic(int track, int musStartPos)
 
 void SetSfxName(const char *sfxName, int sfxID)
 {
-    int sfxNameID   = 0;
-    int soundNameID = 0;
-    while (sfxName[sfxNameID]) {
-        if (sfxName[sfxNameID] != ' ')
-            sfxNames[sfxID][soundNameID++] = sfxName[sfxNameID];
-        ++sfxNameID;
+    if (sfxList[sfxID]) {
+        struct SFXInfo *info = sfxList[sfxID];
+        strcpy(info->name, sfxName);
+        printLog("Set SFX (%d) name to: %s", sfxID, sfxName);
     }
-    sfxNames[sfxID][soundNameID] = 0;
-    printLog("Set SFX (%d) name to: %s", sfxID, sfxName);
 }
 
 void LoadSfx(char *filePath, byte sfxID)
@@ -539,13 +378,17 @@ void LoadSfx(char *filePath, byte sfxID)
     if (LoadFile(fullPath, &info)) {
         byte type = fullPath[StrLength(fullPath) - 3];
         if (type == 'w') {
-            byte *sfx = new byte[info.vfileSize];
+            void *sfx = malloc(info.vfileSize); 
             FileRead(sfx, info.vfileSize);
             CloseFile();
 
-            // PLAY WAV
-            if (audio_drv->loadWav)
-                audio_drv->loadWav(filePath, &info, sfxID, sfx);
+            if (sfxList[sfxID]) {
+                struct SFXInfo *sfx_info = sfxList[sfxID];
+                sfx_info->buffer = sfx;
+                sfx_info->source = cm_new_source_from_mem(sfx, info.vfileSize);
+                if (!sfx_info->source)
+                    printf("Error creating SFX item");
+            }
         }
         else if (type == 'o') {
             // ogg sfx :(
@@ -613,96 +456,71 @@ void LoadSfx(char *filePath, byte sfxID)
 
 void PlaySfx(int sfx, bool loop)
 {
-    if (audio_drv->lock)
-            audio_drv->lock();
-    int sfxChannelID = -1;
-    for (int c = 0; c < CHANNEL_COUNT; ++c) {
-        if (sfxChannels[c].sfxID == sfx || sfxChannels[c].sfxID == -1) {
-            sfxChannelID = c;
-            break;
-        }
+    if (sfxList[sfx]) {
+        struct SFXInfo *info = sfxList[sfx];
+        cm_set_loop(info->source, loop);
+        cm_play(info->source);
     }
 
-    ChannelInfo *sfxInfo  = &sfxChannels[sfxChannelID];
-    sfxInfo->sfxID        = sfx;
-    sfxInfo->samplePtr    = sfxList[sfx].buffer;
-    sfxInfo->sampleLength = sfxList[sfx].length;
-    sfxInfo->loopSFX      = loop;
-    sfxInfo->pan          = 0;
-    if (audio_drv->unlock)
-        audio_drv->unlock();
 }
 void SetSfxAttributes(int sfx, int loopCount, sbyte pan)
 {
-    if (audio_drv->lock)
-            audio_drv->lock();
-    int sfxChannel = -1;
-    for (int i = 0; i < CHANNEL_COUNT; ++i) {
-        if (sfxChannels[i].sfxID == sfx) {
-            sfxChannel = i;
-            break;
-        }
-    }
-    if (sfxChannel == -1) {
-        if (audio_drv->unlock)
-            audio_drv->unlock();
-        return; // wasn't found
-    }
+    // if (audio_drv->lock)
+    //         audio_drv->lock();
+    // int sfxChannel = -1;
+    // if (sfxChannel == -1) {
+    //     if (audio_drv->unlock)
+    //         audio_drv->unlock();
+    //     return; // wasn't found
+    // }
 
-    ChannelInfo *sfxInfo = &sfxChannels[sfxChannel];
-    sfxInfo->loopSFX     = loopCount == -1 ? sfxInfo->loopSFX : loopCount;
-    sfxInfo->pan         = pan;
-    sfxInfo->sfxID       = sfx;
-    if (audio_drv->unlock)
-        audio_drv->unlock();
+    // ChannelInfo *sfxInfo = &sfxChannels[sfxChannel];
+    // sfxInfo->loopSFX     = loopCount == -1 ? sfxInfo->loopSFX : loopCount;
+    // sfxInfo->pan         = pan;
+    // sfxInfo->sfxID       = sfx;
+    // if (audio_drv->unlock)
+    //     audio_drv->unlock();
 }
 
 void StopMusic(bool setStatus)
 {
-    if (setStatus)
-        musicStatus = MUSIC_STOPPED;
+    // if (setStatus)
+    //     musicStatus = MUSIC_STOPPED;
 
-    if (musInfo.loaded) {
-        if (audio_drv->lock)
-            audio_drv->lock();
+    // if (musInfo.loaded) {
+    //     if (audio_drv->lock)
+    //         audio_drv->lock();
         
-        if (musInfo.buffer)
-            delete[] musInfo.buffer;
+    //     if (musInfo.buffer)
+    //         delete[] musInfo.buffer;
 
-        ov_clear(&musInfo.vorbisFile);
-        musInfo.buffer = nullptr;
-        musInfo.trackLoop = false;
-        musInfo.loopPoint = 0;
-        musInfo.loaded    = false;
+    //     ov_clear(&musInfo.vorbisFile);
+    //     musInfo.buffer = nullptr;
+    //     musInfo.trackLoop = false;
+    //     musInfo.loopPoint = 0;
+    //     musInfo.loaded    = false;
 
-        if (audio_drv->release)
-            audio_drv->release();
+    //     if (audio_drv->release)
+    //         audio_drv->release();
 
-        if (audio_drv->unlock)
-            audio_drv->unlock();
+    //     if (audio_drv->unlock)
+    //         audio_drv->unlock();
+    // }
+}
+
+void StopSfx(int sfx)
+{
+    if (sfxList[sfx]) {
+        struct SFXInfo *info = sfxList[sfx];
+        cm_stop(info->source);
     }
 }
 
 void StopAllSfx()
 {
-#if !RETRO_USE_ORIGINAL_CODE
-    if (audio_drv->lock)
-        audio_drv->lock();
-#endif
-    for (int i = 0; i < CHANNEL_COUNT; ++i) sfxChannels[i].sfxID = -1;
-#if !RETRO_USE_ORIGINAL_CODE
-    if (audio_drv->unlock)
-        audio_drv->unlock();
-#endif
-}
-
-void StopSfx(int sfx)
-{
-    for (int i = 0; i < CHANNEL_COUNT; ++i) {
-        if (sfxChannels[i].sfxID == sfx) {
-            MEM_ZERO(sfxChannels[i]);
-            sfxChannels[i].sfxID = -1;
-        }
+    int i;
+    for (i = 0; i <SFX_COUNT; i++) {
+        StopSfx(i);
     }
 }
 
@@ -710,23 +528,23 @@ void StopSfx(int sfx)
 // Helper Funcs
 bool PlaySFXByName(const char *sfx, sbyte loopCnt)
 {
-    for (int s = 0; s < globalSFXCount + stageSFXCount; ++s) {
-        if (StrComp(sfxNames[s], sfx)) {
-            PlaySfx(s, loopCnt);
-            return true;
-        }
-    }
+    // for (int s = 0; s < globalSFXCount + stageSFXCount; ++s) {
+    //     if (StrComp(sfxNames[s], sfx)) {
+    //         PlaySfx(s, loopCnt);
+    //         return true;
+    //     }
+    // }
     return false;
 }
 
 bool StopSFXByName(const char *sfx)
 {
-    for (int s = 0; s < globalSFXCount + stageSFXCount; ++s) {
-        if (StrComp(sfxNames[s], sfx)) {
-            StopSfx(s);
-            return true;
-        }
-    }
+    // for (int s = 0; s < globalSFXCount + stageSFXCount; ++s) {
+    //     if (StrComp(sfxNames[s], sfx)) {
+    //         StopSfx(s);
+    //         return true;
+    //     }
+    // }
     return false;
 }
 #endif
@@ -761,15 +579,14 @@ void ResumeSound()
 
 void ReleaseGlobalSfx()
 {
+    printf("\n\n\n\n\nRELEASSSINGGGGG GLOBALLL SFXLIST\n\n\n\n\n\n\n");
     for (int i = globalSFXCount - 1; i >= 0; --i) {
-        if (sfxList[i].loaded) {
-            StrCopy(sfxList[i].name, "");
-            StrCopy(sfxNames[i], "");
-            if (sfxList[i].buffer)
-                free(sfxList[i].buffer);
-            sfxList[i].buffer = NULL;
-            sfxList[i].length = 0;
-            sfxList[i].loaded = false;
+        if (sfxList[i]) {
+            struct SFXInfo *info = sfxList[i];
+            cm_stop(info->source);
+            // free(info->buffer);
+            StrCopy(info->name, "");
+            // free(info->source);
         }
     }
     globalSFXCount = 0;
@@ -777,15 +594,14 @@ void ReleaseGlobalSfx()
 
 void ReleaseStageSfx()
 {
+    printf("\n\n\n\n\nRELEASSSINGGGGG STAGEEEE SFXLIST\n\n\n\n\n\n\n");
     for (int i = (stageSFXCount + globalSFXCount) - 1; i >= globalSFXCount; --i) {
-        if (sfxList[i].loaded) {
-            StrCopy(sfxList[i].name, "");
-            StrCopy(sfxNames[i], "");
-            if (sfxList[i].buffer)
-                free(sfxList[i].buffer);
-            sfxList[i].buffer = NULL;
-            sfxList[i].length = 0;
-            sfxList[i].loaded = false;
+        if (sfxList[i]) {
+            struct SFXInfo *info = sfxList[i];
+            cm_stop(info->source);
+            // free(info->buffer);
+            StrCopy(info->name, "");
+            // free(info->source);
         }
     }
     stageSFXCount = 0;
@@ -797,4 +613,10 @@ void ReleaseAudioDevice()
     StopAllSfx();
     ReleaseStageSfx();
     ReleaseGlobalSfx();
+
+    int i;
+    for (i = 0; i <SFX_COUNT; i++) {
+        if(sfxList[i])
+            free(sfxList[i]);
+    }
 }

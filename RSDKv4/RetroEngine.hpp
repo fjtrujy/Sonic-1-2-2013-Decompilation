@@ -109,6 +109,7 @@ extern bool engineDebugMode;
 #include "Text.hpp"
 #include "Userdata.hpp"
 #include "Debug.hpp"
+#include "cmixer.hpp"
 
 // Native Entities
 #include "PauseMenu.hpp"
