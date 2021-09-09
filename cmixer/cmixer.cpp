@@ -666,7 +666,7 @@ typedef struct {
 
 static void ogg_handler(cm_Event *e) {
   int n, len;
-  OggStream *s = e->udata;
+  OggStream *s = (OggStream *)e->udata;
   cm_Int16 *buf;
 
   switch (e->type) {
@@ -706,12 +706,12 @@ static const char* ogg_init(cm_SourceInfo *info, void *data, int len, int ownsda
   stb_vorbis_info ogginfo;
   int err;
 
-  ogg = stb_vorbis_open_memory(data, len, &err, NULL);
+  ogg = stb_vorbis_open_memory((const unsigned char *)data, len, &err, NULL);
   if (!ogg) {
     return error("invalid ogg data");
   }
 
-  stream = calloc(1, sizeof(*stream));
+  stream = (OggStream *)calloc(1, sizeof(*stream));
   if (!stream) {
     stb_vorbis_close(ogg);
     return error("allocation failed");

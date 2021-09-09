@@ -2,6 +2,8 @@
 
 #if RETRO_USING_SDL2
 
+#include "cmixer.hpp"
+
 #define AUDIO_FREQUENCY (44100)
 #define AUDIO_FORMAT    (AUDIO_S16SYS) /**< Signed 16-bit samples */
 #define AUDIO_SAMPLES   (0x800)
@@ -13,17 +15,37 @@ static SDL_AudioSpec audioDeviceFormat;
 
 int total_reserved = 0;
 
+static SDL_mutex* audio_mutex;
+
+static void lock_handler(cm_Event *e) {
+  if (e->type == CM_EVENT_LOCK) {
+    SDL_LockMutex(audio_mutex);
+  }
+  if (e->type == CM_EVENT_UNLOCK) {
+    SDL_UnlockMutex(audio_mutex);
+  }
+}
+
+static void audio_callback(void *udata, Uint8 *stream, int size) {
+    if (musicStatus = MUSIC_PLAYING)
+        cm_process((short int *)stream, size / 2);
+}
+
 #endif
 
 static int sdl2_init(PlaybackFunction playbackFunc) {
     bool audioEnabled = false;
 #if RETRO_USING_SDL2
+    SDL_AudioDeviceID dev;
+    SDL_AudioSpec fmt, got;
+
+
     SDL_AudioSpec want;
     want.freq     = AUDIO_FREQUENCY;
     want.format   = AUDIO_FORMAT;
     want.samples  = AUDIO_SAMPLES;
     want.channels = AUDIO_CHANNELS;
-    want.callback = playbackFunc;
+    want.callback = audio_callback;
 
     if ((audioDevice = SDL_OpenAudioDevice(nullptr, 0, &want, &audioDeviceFormat, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE)) > 0) {
         SDL_PauseAudioDevice(audioDevice, 0);
@@ -33,102 +55,107 @@ static int sdl2_init(PlaybackFunction playbackFunc) {
         printLog("Unable to open audio device: %s", SDL_GetError());
     }
 
+      /* Init library */
+    cm_init(audioDeviceFormat.freq);
+    cm_set_lock(lock_handler);
+    cm_set_master_gain(0.5);
+
 #endif
     return audioEnabled;
 }
 
 static void sdl2_configure(int format, int channels, int rate, int freq, int samples) {
 #if RETRO_USING_SDL2
-    stream = SDL_NewAudioStream(AUDIO_S16, musInfo.vorbisFile.vi->channels, (int)musInfo.vorbisFile.vi->rate,
-                                                audioDeviceFormat.format, audioDeviceFormat.channels, audioDeviceFormat.freq);
-    if (!stream)
-        printLog("Failed to create stream: %s", SDL_GetError());
+    // stream = SDL_NewAudioStream(AUDIO_S16, musInfo.vorbisFile.vi->channels, (int)musInfo.vorbisFile.vi->rate,
+    //                                             audioDeviceFormat.format, audioDeviceFormat.channels, audioDeviceFormat.freq);
+    // if (!stream)
+    //     printLog("Failed to create stream: %s", SDL_GetError());
 #endif
 }
 
 static void sdl2_release() {
 #if RETRO_USING_SDL2
-    if (stream)
-        SDL_FreeAudioStream(stream);
-    stream = nullptr;
+    // if (stream)
+    //     SDL_FreeAudioStream(stream);
+    // stream = nullptr;
 #endif
 }
 
 static void sdl2_createThread(ThreadFunction threadFunc, const char *name) {
 #if RETRO_USING_SDL2
-        SDL_CreateThread((SDL_ThreadFunction)threadFunc, name, NULL);
+        // SDL_CreateThread((SDL_ThreadFunction)threadFunc, name, NULL);
 #endif
 }
 
 static void sdl2_lock() {
 #if RETRO_USING_SDL2
-    SDL_LockAudio();
+    // SDL_LockAudio();
 #endif
 }
 
 static void sdl2_unlock() {
 #if RETRO_USING_SDL2
-    SDL_UnlockAudio();
+    // SDL_UnlockAudio();
 #endif
 }
 
 static void sdl2_loadWav(const char *filePath, FileInfo *info, byte sfxID, byte *sfx)
 {
 #if RETRO_USING_SDL2
-    SDL_RWops *src = SDL_RWFromMem(sfx, info->vfileSize);
-    if (src == NULL) {
-        printLog("Unable to open sfx: %s", info->fileName);
-    }
-    else {
-        SDL_AudioSpec wav_spec;
-        uint wav_length;
-        byte *wav_buffer;
-        SDL_AudioSpec *wav = SDL_LoadWAV_RW(src, 0, &wav_spec, &wav_buffer, &wav_length);
+    // SDL_RWops *src = SDL_RWFromMem(sfx, info->vfileSize);
+    // if (src == NULL) {
+    //     printLog("Unable to open sfx: %s", info->fileName);
+    // }
+    // else {
+    //     SDL_AudioSpec wav_spec;
+    //     uint wav_length;
+    //     byte *wav_buffer;
+    //     SDL_AudioSpec *wav = SDL_LoadWAV_RW(src, 0, &wav_spec, &wav_buffer, &wav_length);
 
-        SDL_RWclose(src);
-        delete[] sfx;
-        if (wav == NULL) {
-            printLog("Unable to read sfx: %s", info->fileName);
-        }
-        else {
-            SDL_AudioCVT convert;
-            if (SDL_BuildAudioCVT(&convert, wav->format, wav->channels, wav->freq, audioDeviceFormat.format, audioDeviceFormat.channels,
-                                    audioDeviceFormat.freq)
-                > 0) {
-                convert.buf = (byte *)malloc(wav_length * convert.len_mult);
-                convert.len = wav_length;
-                memcpy(convert.buf, wav_buffer, wav_length);
-                SDL_ConvertAudio(&convert);
+    //     SDL_RWclose(src);
+    //     delete[] sfx;
+    //     if (wav == NULL) {
+    //         printLog("Unable to read sfx: %s", info->fileName);
+    //     }
+    //     else {
+    //         SDL_AudioCVT convert;
+    //         if (SDL_BuildAudioCVT(&convert, wav->format, wav->channels, wav->freq, audioDeviceFormat.format, audioDeviceFormat.channels,
+    //                                 audioDeviceFormat.freq)
+    //             > 0) {
+    //             convert.buf = (byte *)malloc(wav_length * convert.len_mult);
+    //             convert.len = wav_length;
+    //             memcpy(convert.buf, wav_buffer, wav_length);
+    //             SDL_ConvertAudio(&convert);
 
-                sdl2_lock();
+    //             sdl2_lock();
 
-                total_reserved += wav_length * convert.len_mult;
-                printf("Total reserverd %i\n", total_reserved);
+    //             total_reserved += wav_length * convert.len_mult;
+    //             printf("Total reserverd %i\n", total_reserved);
 
-                StrCopy(sfxList[sfxID].name, filePath);
-                sfxList[sfxID].buffer = (Sint16 *)convert.buf;
-                sfxList[sfxID].length = convert.len_cvt / sizeof(Sint16);
-                sfxList[sfxID].loaded = true;
+    //             StrCopy(sfxList[sfxID].name, filePath);
+    //             sfxList[sfxID].buffer = (Sint16 *)convert.buf;
+    //             sfxList[sfxID].length = convert.len_cvt / sizeof(Sint16);
+    //             sfxList[sfxID].loaded = true;
                 
-                sdl2_unlock();
+    //             sdl2_unlock();
 
-                SDL_FreeWAV(wav_buffer);
-            }
-            else { //this causes errors, actually
-                printLog("Unable to read sfx: %s (error: %s)", info->fileName, SDL_GetError());
-                sfxList[sfxID].loaded = false;
-                SDL_FreeWAV(wav_buffer);
-                //if (audio_drv->lock)
-                //  audio_drv->lock();
-                //StrCopy(sfxList[sfxID].name, filePath);
-                //sfxList[sfxID].buffer = (Sint16 *)wav_buffer;
-                //sfxList[sfxID].length = wav_length / sizeof(Sint16);
-                //sfxList[sfxID].loaded = false;
-                //if (audio_drv->unlock)
-                //  audio_drv->unlock();
-            }
-        }
-    }
+    //             SDL_FreeWAV(wav_buffer);
+    //         }
+    //         else { //this causes errors, actually
+    //             printLog("Unable to read sfx: %s (error: %s)", info->fileName, SDL_GetError());
+    //             sfxList[sfxID].loaded = false;
+    //             SDL_FreeWAV(wav_buffer);
+    //             //if (audio_drv->lock)
+    //             //  audio_drv->lock();
+    //             //StrCopy(sfxList[sfxID].name, filePath);
+    //             //sfxList[sfxID].buffer = (Sint16 *)wav_buffer;
+    //             //sfxList[sfxID].length = wav_length / sizeof(Sint16);
+    //             //sfxList[sfxID].loaded = false;
+    //             //if (audio_drv->unlock)
+    //             //  audio_drv->unlock();
+    //         }
+    //     }
+    // }
 #endif
 }
 

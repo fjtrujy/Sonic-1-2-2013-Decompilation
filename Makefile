@@ -59,7 +59,15 @@ SOURCES += \
         # RSDKv4/drivers/engine/engine_PS2.cpp     \
         # RSDKv4/drivers/engine/engine_NULL.cpp    \
 
-CXXFLAGS_ALL += -O0 -g
+# CMixer Objects
+SOURCES += cmixer/cmixer.cpp     \
+        cmixer/stb_vorbis.c
+
+
+CXXFLAGS_ALL += -Icmixer -DCM_USE_STB_VORBIS
+
+CXXFLAGS_ALL += -O0 -g 
+
 
 objects/%.o: %
 	mkdir -p $(@D)
